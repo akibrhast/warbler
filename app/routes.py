@@ -4,7 +4,7 @@ from app import app, db
 from flask import render_template, request, flash, redirect, session, g,url_for
 from sqlalchemy.exc import IntegrityError
 
-from app.forms import UserAddForm, LoginForm, MessageForm
+from app.forms import UserAddForm, LoginForm, MessageForm,EditForm
 from app.models import User, Message
 
 import os
@@ -203,9 +203,30 @@ def stop_following(follow_id):
 @app.route('/users/profile', methods=["GET", "POST"])
 def profile():
     """Update profile for current user."""
+    
+    #Ensure that use is logged in
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+    
+    #Initialize Edit Form with user data from g
+    form = EditForm(obj=g.user)
 
-    # IMPLEMENT THIS
+    if form.validate_on_submit():
+        user = User.authenticate(g.user.username,form.password.data)
+        if not user:
+            flash("Password did not match","danger")
+            return redirect('/')
+        else:
+            #Populate user model from form data and commit to db
+            form.populate_obj(g.user)
+            db.session.commit()
 
+            return redirect(url_for('users_show',user_id=g.user.id))
+
+
+
+    return render_template('/users/edit.html',form=form)
 
 @app.route('/users/delete', methods=["POST"])
 def delete_user():
