@@ -203,7 +203,6 @@ def stop_following(follow_id):
 @app.route('/users/profile', methods=["GET", "POST"])
 def profile():
     """Update profile for current user."""
-    
     #Ensure that use is logged in
     if not g.user:
         flash("Access unauthorized.", "danger")
@@ -218,6 +217,8 @@ def profile():
             flash("Password did not match","danger")
             return redirect('/')
         else:
+            #Remove the password field from the form we do not want any password modications here
+            form.__delitem__("password")
             #Populate user model from form data and commit to db
             form.populate_obj(g.user)
             db.session.commit()
